@@ -26,24 +26,51 @@ public class Network {
         return this.graph.length;
     }
 
+    /**
+     * @return number of edges
+     */
     public int numberOfConnections() {
-        return 0;
+        int count = 0;
+        for (int i = 0; i < graph.length; i++) {
+            count += graph[i].size();
+        }
+        return count;
     }
 
-    public void addConnection(int v, int w){
-
+    /**
+     * addes a new connection, if it doesnt exists already
+     * @param v vertex 1
+     * @param w vertex 2
+     */
+    public void addConnection(int v, int w) {
+        // we just want simple graphs
+        if (v == w) {
+            return;
+        }
+        // lets check if the current connection already exists, if yes then ignore that call
+        if (!graph[v].contains(w)) {
+            // add graph connection in both direction, because our graph is not directed
+            graph[v].add(w);
+            graph[w].add(v);
+        }
     }
 
-    public void addAllConnections(int v){
-
+    public void addAllConnections(int v) {
+        for (int i = 0; i < graph.length; i++) {
+            addConnection(v, i);
+        }
     }
 
-    public void deleteConnection(int v, int w){
-
+    public void deleteConnection(int v, int w) {
+        // remove graph item in both directions
+        graph[v].remove(w);
+        graph[w].remove(v);
     }
 
-    public void deleteAllConnections(int v){
-
+    public void deleteAllConnections(int v) {
+        for (Integer node : graph[v]) {
+            deleteConnection(v, node);
+        }
     }
 
     /**
@@ -88,7 +115,7 @@ public class Network {
     }
 
     public int minimalNumberOfConnections(int start, int end){
-        return 0;
+        return -1;
     }
 
     public List<Integer> criticalNodes() {
