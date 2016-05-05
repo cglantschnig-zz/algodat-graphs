@@ -34,7 +34,8 @@ public class Network {
         for (int i = 0; i < graph.length; i++) {
             count += graph[i].size();
         }
-        return count;
+        // devide by 2 because every connection exists 2 times
+        return count / 2;
     }
 
     /**
@@ -110,12 +111,78 @@ public class Network {
         }
     }
 
+    /**
+     * checks if the given graph has a circle or not
+     * @return true if there is a circle, false if not
+     */
     public boolean hasCycle() {
+        boolean marked[] = new boolean[this.graph.length];
+        // set all nodes as not seen so far
+        for (int i = 0; i < this.graph.length; i++) {
+            marked[i] = false;
+        }
+
+        for (int i = 0; i < this.graph.length; i++) {
+            if (!marked[i]) {
+                if (hasCycle(marked, i, -1) == true) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
-    public int minimalNumberOfConnections(int start, int end){
-        return -1;
+    private boolean hasCycle(boolean[] markedNodes, int currentNode, int parent) {
+        // Mark the current node as visited
+        markedNodes[currentNode] = true;
+
+        // Recur for all the vertices adjacent to this vertex
+        for (Integer i : graph[currentNode]) {
+            // If an adjacent is not visited, then recur for that
+            // adjacent
+            if (!markedNodes[i]) {
+                if (hasCycle(markedNodes, i, currentNode))
+                    return true;
+            }
+
+            // If an adjacent is visited and not parent of current
+            // vertex, then there is a cycle.
+            else if (i != parent)
+                return true;
+        }
+        return false;
+    }
+
+    public int minimalNumberOfConnections(int start, int end) {
+        if (start == end) {
+            return 0;
+        }
+        int marked[] = new int[this.graph.length];
+        // set all nodes as not seen so far
+        for (int i = 0; i < this.graph.length; i++) {
+            marked[i] = -1;
+        }
+
+        ArrayDeque<Integer> queue = new ArrayDeque<>();
+
+        queue.add(start);
+        marked[start] = 0;
+        int current;
+        while (queue.size() > 0) {
+            current = queue.removeFirst();
+            for (Integer node : graph[current]) {
+                if (marked[node] == -1) {
+                    marked[node] = marked[current] + 1;
+                    if (node == end) {
+                        return marked[end];
+                    }
+                    queue.add(node);
+                }
+            }
+
+        }
+
+        return marked[end];
     }
 
     public List<Integer> criticalNodes() {
