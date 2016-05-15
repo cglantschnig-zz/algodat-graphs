@@ -7,6 +7,9 @@ public class Network {
     // structure holding the graph
     private LinkedList<Integer>[] graph;
 
+    private int[] _componentGraph;
+    private ArrayList<Integer> _countComponentGraph;
+
     /**
      * initializes n empty nodes
      * @param n number of nodes
@@ -64,13 +67,15 @@ public class Network {
 
     public void deleteConnection(int v, int w) {
         // remove graph item in both directions
-        graph[v].remove(w);
-        graph[w].remove(v);
+        graph[v].remove((Integer)w);
+        graph[w].remove((Integer)v);
+
     }
 
     public void deleteAllConnections(int v) {
-        for (Integer node : graph[v]) {
-            deleteConnection(v, node);
+        while(!graph[v].isEmpty()) {
+            Integer node = graph[v].remove();
+            graph[node].remove((Integer)v);
         }
     }
 
@@ -109,6 +114,18 @@ public class Network {
                 dfs(markedVertexes, node);
             }
         }
+    }
+
+    private int dfs(boolean[] markedVertexes, int vertex, int componentGraph) {
+        markedVertexes[vertex] = true;
+        _componentGraph[vertex] = componentGraph;
+        int count = 1;
+        for (Integer node : this.graph[vertex]) {
+            if (!markedVertexes[node]) {
+                count += dfs(markedVertexes, node, componentGraph);
+            }
+        }
+        return count;
     }
 
     /**
@@ -185,8 +202,56 @@ public class Network {
         return marked[end];
     }
 
+    private void cacheInitialGraph() {
+        boolean marked[] = new boolean[this.graph.length];
+        // set all nodes as not seen so far
+        for (int i = 0; i < this.graph.length; i++) {
+            marked[i] = false;
+        }
+        _componentGraph = new int[graph.length];
+        _countComponentGraph = new ArrayList<>();
+        int componentCount = 0;
+        for (int i = 0; i < this.graph.length; i++) {
+            if (!marked[i]) {
+                _countComponentGraph.add(dfs(marked, i, componentCount));
+                componentCount += 1;
+            }
+        }
+    }
+
     public List<Integer> criticalNodes() {
         List<Integer> critical = new LinkedList<Integer>();
+        this.cacheInitialGraph();
+
+        int marked[] = new int[graph.length];
+        for (int i = 0; i < graph.length; i++) {
+            marked[i] = -1;
+        }
+
+        for (int i = 0; i < graph.length; i++) {
+            int componentLength = 0;
+            if (graph[i].size() > 0) {
+                Stack<Integer> s = new Stack<>();
+                s.push(graph[i].getFirst());
+                while (!s.isEmpty()) {
+                    int v = s.pop();
+                    if (v != i && marked[v] != i) {
+                        marked[v] = i;
+                        componentLength += 1;
+                        for (Integer j : graph[v]) {
+                            if (j != i) {
+                                s.push(j);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ( _countComponentGraph.get(_componentGraph[i]) - 1 > componentLength ) {
+                critical.add(i);
+            }
+        }
+
         return critical;
     }
 }
