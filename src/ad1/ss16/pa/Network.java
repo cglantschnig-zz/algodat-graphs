@@ -2,6 +2,7 @@ package ad1.ss16.pa;
 
 import java.util.*;
 
+@SuppressWarnings( "all" )
 public class Network {
 
     // structure holding the graph
