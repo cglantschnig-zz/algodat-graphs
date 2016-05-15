@@ -245,10 +245,9 @@ public class Network {
                         }
                     }
                 }
-            }
-
-            if ( _countComponentGraph.get(_componentGraph[i]) - 1 > componentLength ) {
-                critical.add(i);
+                if ( _countComponentGraph.get(_componentGraph[i]) - 1 > componentLength ) {
+                    critical.add(i);
+                }
             }
         }
 
