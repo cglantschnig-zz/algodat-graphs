@@ -6,7 +6,7 @@ import java.util.*;
 public class Network {
 
     // structure holding the graph
-    private LinkedList<Integer>[] graph;
+    private HashSet<Integer>[] graph;
 
     private int NUMBER_OF_NODES;
     private boolean markedVertexes[];
@@ -24,10 +24,10 @@ public class Network {
      */
     public Network(int n) {
         this.NUMBER_OF_NODES = n;
-        this.graph = new LinkedList[n];
+        this.graph = new HashSet[n];
         for (int i = 0; i < this.graph.length; i++) {
             // initialize all nodes with null, to show that they are empty
-            this.graph[i] = new LinkedList();
+            this.graph[i] = new HashSet();
         }
     }
 
@@ -95,10 +95,10 @@ public class Network {
      * @param v
      */
     public void deleteAllConnections(int v) {
-        while(!graph[v].isEmpty()) {
-            Integer node = graph[v].remove();
-            graph[node].remove((Integer)v);
+        for (Integer node : graph[v]) {
+            graph[node].remove((Integer) v);
         }
+        graph[v] = new HashSet<>();
     }
 
     /**
