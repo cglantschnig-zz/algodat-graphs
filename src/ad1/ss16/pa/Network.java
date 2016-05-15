@@ -8,16 +8,22 @@ public class Network {
     // structure holding the graph
     private LinkedList<Integer>[] graph;
 
-    private int[] _componentGraph;
-    private ArrayList<Integer> _countComponentGraph;
-
+    private int NUMBER_OF_NODES;
     private boolean markedVertexes[];
+    private int time = 0;
+
+    private boolean visited[];
+    private int disc[];
+    private int low[];
+    private int parent[];
+    private boolean ap[]; // To store articulation points
 
     /**
      * initializes n empty nodes
      * @param n number of nodes
      */
     public Network(int n) {
+        this.NUMBER_OF_NODES = n;
         this.graph = new LinkedList[n];
         for (int i = 0; i < this.graph.length; i++) {
             // initialize all nodes with null, to show that they are empty
@@ -62,12 +68,21 @@ public class Network {
         }
     }
 
+    /**
+     * adds connection from one vertex from all other vertexes
+     * @param v vertext which is getting connected to all others
+     */
     public void addAllConnections(int v) {
         for (int i = 0; i < graph.length; i++) {
             addConnection(v, i);
         }
     }
 
+    /**
+     * deletes a certain connection in the graph
+     * @param v
+     * @param w
+     */
     public void deleteConnection(int v, int w) {
         // remove graph item in both directions
         graph[v].remove((Integer)w);
@@ -75,6 +90,10 @@ public class Network {
 
     }
 
+    /**
+     * removes all connections from a certain vertex
+     * @param v
+     */
     public void deleteAllConnections(int v) {
         while(!graph[v].isEmpty()) {
             Integer node = graph[v].remove();
@@ -97,7 +116,7 @@ public class Network {
         int componentCount = 0;
         for (int i = 0; i < this.graph.length; i++) {
             if (!markedVertexes[i]) {
-                dfs(i);
+                dfs(i); // using dfs algorithm to determine a component
                 componentCount += 1;
             }
         }
@@ -110,24 +129,16 @@ public class Network {
      * @param vertex the current vertex, from where we start to look around
      */
     private void dfs(int vertex) {
-        markedVertexes[vertex] = true;
-        for (Integer node : this.graph[vertex]) {
-            if (!markedVertexes[node]) {
-                dfs(node);
+        Stack<Integer> s = new Stack<Integer>();
+        s.push(vertex);
+        while (!s.isEmpty()) {
+            int i = s.pop();
+            if (markedVertexes[i] == false) {
+                markedVertexes[i] = true;
+                for (int j : graph[i])
+                    s.push(j);
             }
         }
-    }
-
-    private int dfs(int vertex, int componentGraph) {
-        markedVertexes[vertex] = true;
-        _componentGraph[vertex] = componentGraph;
-        int count = 1;
-        for (Integer node : this.graph[vertex]) {
-            if (!markedVertexes[node]) {
-                count += dfs(node, componentGraph);
-            }
-        }
-        return count;
     }
 
     /**
@@ -204,54 +215,85 @@ public class Network {
         return marked[end];
     }
 
-    private void cacheInitialGraph() {
-        markedVertexes = new boolean[this.graph.length];
-        // set all nodes as not seen so far
-        for (int i = 0; i < this.graph.length; i++) {
-            markedVertexes[i] = false;
-        }
-        _componentGraph = new int[graph.length];
-        _countComponentGraph = new ArrayList<>();
-        int componentCount = 0;
-        for (int i = 0; i < this.graph.length; i++) {
-            if (!markedVertexes[i]) {
-                _countComponentGraph.add(dfs(i, componentCount));
-                componentCount += 1;
+    private void APUtil(int u)
+    {
+
+        // Count of children in DFS Tree
+        int children = 0;
+
+        // Mark the current node as visited
+        visited[u] = true;
+
+        // Initialize discovery time and low value
+        disc[u] = low[u] = ++time;
+
+        // Go through all vertices adjacent to this
+        Iterator<Integer> i = graph[u].iterator();
+        while (i.hasNext())
+        {
+            int v = i.next();  // v is current adjacent of u
+
+            // If v is not visited yet, then make it a child of u
+            // in DFS tree and recur for it
+            if (!visited[v])
+            {
+                children++;
+                parent[v] = u;
+                APUtil(v);
+
+                // Check if the subtree rooted with v has a connection to
+                // one of the ancestors of u
+                low[u]  = Math.min(low[u], low[v]);
+
+                // u is an articulation point in following cases
+
+                // (1) u is root of DFS tree and has two or more chilren.
+                if (parent[u] == -1 && children > 1)
+                    ap[u] = true;
+
+                // (2) If u is not root and low value of one of its child
+                // is more than discovery value of u.
+                if (parent[u] != -1 && low[v] >= disc[u])
+                    ap[u] = true;
             }
+
+            // Update low value of u for parent function calls.
+            else if (v != parent[u])
+                low[u]  = Math.min(low[u], disc[v]);
         }
     }
 
+    /**
+     * searches for critical points.
+     * @return a list of points, which are critical
+     */
     public List<Integer> criticalNodes() {
         List<Integer> critical = new LinkedList<Integer>();
-        this.cacheInitialGraph();
+        // Mark all the vertexes as not visited
+        visited = new boolean[NUMBER_OF_NODES];
+        disc = new int[NUMBER_OF_NODES];
+        low = new int[NUMBER_OF_NODES];
+        parent = new int[NUMBER_OF_NODES];
+        ap = new boolean[NUMBER_OF_NODES]; // To store articulation points
 
-        int marked[] = new int[graph.length];
-        for (int i = 0; i < graph.length; i++) {
-            marked[i] = -1;
+        // Initialize parent and visited, and ap(articulation point)
+        for (int i = 0; i < NUMBER_OF_NODES; i++)
+        {
+            parent[i] = -1;
+            visited[i] = false;
+            ap[i] = false;
         }
 
-        for (int i = 0; i < graph.length; i++) {
-            int componentLength = 0;
-            if (graph[i].size() > 0) {
-                Stack<Integer> s = new Stack<>();
-                s.push(graph[i].getFirst());
-                while (!s.isEmpty()) {
-                    int v = s.pop();
-                    if (v != i && marked[v] != i) {
-                        marked[v] = i;
-                        componentLength += 1;
-                        for (Integer j : graph[v]) {
-                            if (j != i) {
-                                s.push(j);
-                            }
-                        }
-                    }
-                }
-                if ( _countComponentGraph.get(_componentGraph[i]) - 1 > componentLength ) {
-                    critical.add(i);
-                }
-            }
-        }
+        // Call the recursive helper function to find articulation
+        // points in DFS tree rooted with vertex 'i'
+        for (int i = 0; i < NUMBER_OF_NODES; i++)
+            if (visited[i] == false)
+                APUtil(i);
+
+        // Now ap[] contains articulation points, print them
+        for (int i = 0; i < NUMBER_OF_NODES; i++)
+            if (ap[i] == true)
+                critical.add(i);
 
         return critical;
     }
