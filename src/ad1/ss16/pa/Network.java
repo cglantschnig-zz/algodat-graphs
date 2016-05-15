@@ -2,7 +2,7 @@ package ad1.ss16.pa;
 
 import java.util.*;
 
-@SuppressWarnings( "all" )
+@SuppressWarnings( "unchecked" )
 public class Network {
 
     // structure holding the graph
@@ -10,6 +10,8 @@ public class Network {
 
     private int[] _componentGraph;
     private ArrayList<Integer> _countComponentGraph;
+
+    private boolean markedVertexes[];
 
     /**
      * initializes n empty nodes
@@ -86,16 +88,16 @@ public class Network {
      * @return number of components in the graph
      */
     public int numberOfComponents() {
-        boolean marked[] = new boolean[this.graph.length];
+        markedVertexes = new boolean[this.graph.length];
         // set all nodes as not seen so far
         for (int i = 0; i < this.graph.length; i++) {
-            marked[i] = false;
+            markedVertexes[i] = false;
         }
 
         int componentCount = 0;
         for (int i = 0; i < this.graph.length; i++) {
-            if (!marked[i]) {
-                dfs(marked, i);
+            if (!markedVertexes[i]) {
+                dfs(i);
                 componentCount += 1;
             }
         }
@@ -105,25 +107,24 @@ public class Network {
 
     /**
      * Depth First Search
-     * @param markedVertexes help array, which represents the marked vertexes (updated via call by reference)
      * @param vertex the current vertex, from where we start to look around
      */
-    private void dfs(boolean[] markedVertexes, int vertex) {
+    private void dfs(int vertex) {
         markedVertexes[vertex] = true;
         for (Integer node : this.graph[vertex]) {
             if (!markedVertexes[node]) {
-                dfs(markedVertexes, node);
+                dfs(node);
             }
         }
     }
 
-    private int dfs(boolean[] markedVertexes, int vertex, int componentGraph) {
+    private int dfs(int vertex, int componentGraph) {
         markedVertexes[vertex] = true;
         _componentGraph[vertex] = componentGraph;
         int count = 1;
         for (Integer node : this.graph[vertex]) {
             if (!markedVertexes[node]) {
-                count += dfs(markedVertexes, node, componentGraph);
+                count += dfs(node, componentGraph);
             }
         }
         return count;
@@ -134,15 +135,15 @@ public class Network {
      * @return true if there is a circle, false if not
      */
     public boolean hasCycle() {
-        boolean marked[] = new boolean[this.graph.length];
+        markedVertexes = new boolean[this.graph.length];
         // set all nodes as not seen so far
         for (int i = 0; i < this.graph.length; i++) {
-            marked[i] = false;
+            markedVertexes[i] = false;
         }
 
         for (int i = 0; i < this.graph.length; i++) {
-            if (!marked[i]) {
-                if (hasCycle(marked, i, -1) == true) {
+            if (!markedVertexes[i]) {
+                if (hasCycle(i, -1) == true) {
                     return true;
                 }
             }
@@ -150,16 +151,16 @@ public class Network {
         return false;
     }
 
-    private boolean hasCycle(boolean[] markedNodes, int currentNode, int parent) {
+    private boolean hasCycle(int currentNode, int parent) {
         // Mark the current node as visited
-        markedNodes[currentNode] = true;
+        markedVertexes[currentNode] = true;
 
         // Recur for all the vertices adjacent to this vertex
         for (Integer i : graph[currentNode]) {
             // If an adjacent is not visited, then recur for that
             // adjacent
-            if (!markedNodes[i]) {
-                if (hasCycle(markedNodes, i, currentNode))
+            if (!markedVertexes[i]) {
+                if (hasCycle(i, currentNode))
                     return true;
             }
 
@@ -204,17 +205,17 @@ public class Network {
     }
 
     private void cacheInitialGraph() {
-        boolean marked[] = new boolean[this.graph.length];
+        markedVertexes = new boolean[this.graph.length];
         // set all nodes as not seen so far
         for (int i = 0; i < this.graph.length; i++) {
-            marked[i] = false;
+            markedVertexes[i] = false;
         }
         _componentGraph = new int[graph.length];
         _countComponentGraph = new ArrayList<>();
         int componentCount = 0;
         for (int i = 0; i < this.graph.length; i++) {
-            if (!marked[i]) {
-                _countComponentGraph.add(dfs(marked, i, componentCount));
+            if (!markedVertexes[i]) {
+                _countComponentGraph.add(dfs(i, componentCount));
                 componentCount += 1;
             }
         }
