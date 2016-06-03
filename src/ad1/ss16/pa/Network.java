@@ -276,6 +276,8 @@ public class Network {
         parent = new int[NUMBER_OF_NODES];
         ap = new boolean[NUMBER_OF_NODES]; // To store articulation points
 
+        time = 0;
+
         // Initialize parent and visited, and ap(articulation point)
         for (int i = 0; i < NUMBER_OF_NODES; i++)
         {
